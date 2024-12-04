@@ -1,12 +1,17 @@
 # from app.model.transport_model import User
 from app.model.transport_mock import MockUser as User
-from app.calculator.calculator import operation
+from app.calculator.calculator import operation1
 
 def create_user(data: dict):
     try:
         user = User(**data)
         user.save()
-        return {"message": "User created successfully", "id": str(user.id), "calculation": operation(user.name)}
+        return {"message": "User created successfully",
+                "id": str(user.id),
+                "calculation_results": {"carbon_emissions": operation1(user.name),
+                                        "transport_trips": 1,
+                                        "residuos": "hot cocoa",
+                                        "gasoline": 12}}
     except Exception as e:
         return {"error": str(e)}
 
@@ -18,7 +23,7 @@ def get_user_by_id(user_id: str):
     try:
         user = User.objects(id=user_id).first()
         if user:
-            return {"id": str(user.id), "name": user.name, "email": user.email, "calculation": operation(user.name)}
+            return {"id": str(user.id), "name": user.name, "email": user.email, "calculation": operation1(user.name)}
         return {"error": "User not found"}
     except Exception as e:
         return {"error": str(e)}
