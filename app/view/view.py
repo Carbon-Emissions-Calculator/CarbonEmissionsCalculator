@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from app.controller.form_controller import (
+from app.controller.report_controller import (
     create_report, get_all_reports, get_report_by_id
 )
 
