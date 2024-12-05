@@ -1,9 +1,20 @@
 # Importando os módulos necessários do FastAPI
 from fastapi import FastAPI
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 # Criando a aplicação FastAPI
 app = FastAPI()
+
+# Configurando o middleware CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permitir todas as origens
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # Modelo de dados usado para receber os números no POST
 class Numbers(BaseModel):
