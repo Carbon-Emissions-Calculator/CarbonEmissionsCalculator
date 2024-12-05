@@ -7,7 +7,7 @@ def create_report(data: dict):
         inputReport = Report(**data)
         inputReport.save()
         return {
-                "message": "User created successfully",
+                "message": "Report created successfully",
                 "id": str(inputReport.id),
                 "transmissions": {
                                 "energy_consumption": {
