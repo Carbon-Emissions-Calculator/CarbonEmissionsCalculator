@@ -3,8 +3,6 @@ from app.controller.report_controller import (
     create_report, get_all_reports, get_report_by_id
 )
 
-#, update_report, delete_report
-
 router = APIRouter()
 
 @router.post("/report/")
@@ -24,17 +22,3 @@ def get_report_by_id_endpoint(report_id: str):
     if "error" in result:
         raise HTTPException(status_code=404, detail=result["error"])
     return result
-
-# @router.put("/users/{user_id}")
-# def update_user_endpoint(user_id: str, data: dict):
-#     result = update_user(user_id, data)
-#     if "error" in result:
-#         raise HTTPException(status_code=404, detail=result["error"])
-#     return result
-
-# @router.delete("/users/{user_id}")
-# def delete_user_endpoint(user_id: str):
-#     result = delete_user(user_id)
-#     if "error" in result:
-#         raise HTTPException(status_code=404, detail=result["error"])
-#     return result

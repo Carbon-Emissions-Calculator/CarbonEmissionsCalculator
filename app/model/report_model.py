@@ -1,88 +1,61 @@
-from mongoengine import (
-    Document, EmbeddedDocument, StringField, IntField, FloatField, BooleanField, ListField, DictField, EmbeddedDocumentField
-)
-from mongoengine import connect
-from mongoengine.queryset import QuerySet
+from pydantic import BaseModel
+from typing import List, Dict, Optional
 
-# Conectar ao MongoDB
-connect(db="fastapi_db", host="localhost", port=27017)
-
-
-# Modelo para ID autoincrementável
-class Counter(Document):
-    collection_name = StringField(required=True, unique=True)
-    seq = IntField(default=0)
+# Subdocumentos como Pydantic Models
+class InformacoesGerais(BaseModel):
+    nome_da_obra: str
+    localizacao: str
+    area_total_obra: int
+    duracao_em_meses: int
+    numero_trabalhadores: int
 
 
-def get_next_sequence(collection_name):
-    counter = Counter.objects(collection_name=collection_name).modify(
-        upsert=True,
-        new=True,
-        inc__seq=1
-    )
-    return counter.seq
+class ConsumoEnergia(BaseModel):
+    fonte_principal: str
+    consumo_mensal_kwh: Optional[int] = 0
+    consumo_mensal_diesel: Optional[int] = 0
+    outras_fontes: Optional[List[str]] = []
 
 
-# Subdocumentos
-class InformacoesGerais(EmbeddedDocument):
-    nome_da_obra = StringField(required=True)
-    localizacao = StringField(required=True)
-    area_total_obra = IntField(required=True)
-    duracao_em_meses = IntField(required=True)
-    numero_trabalhadores = IntField(required=True)
+class TransporteMateriais(BaseModel):
+    distancia_media_km: float
+    numero_viagens_mensal: int
+    tipo_combustivel: str
+    consumo_litros_por_km: float
 
 
-class ConsumoEnergia(EmbeddedDocument):
-    fonte_principal = StringField(required=True)
-    consumo_mensal_kwh = IntField(default=0)
-    consumo_mensal_diesel = IntField(default=0)
-    outras_fontes = ListField(StringField(), default=[])
+class ResiduosObra(BaseModel):
+    quantidade_residuos_kg_por_mes: int
+    destinacao: str
+    percentual_reciclado: float
 
 
-class TransporteMateriais(EmbeddedDocument):
-    distancia_media_km = FloatField(required=True)
-    numero_viagens_mensal = IntField(required=True)
-    tipo_combustivel = StringField(required=True)
-    consumo_litros_por_km = FloatField(required=True)
+class MateriaisConstrucao(BaseModel):
+    cimento_toneladas_por_mes: int
+    aco_toneladas_por_mes: int
+    madeira_m3_por_mes: float
+    outros_materiais: Optional[Dict] = {}
 
 
-class ResiduosObra(EmbeddedDocument):
-    quantidade_residuos_kg_por_mes = IntField(required=True)
-    destinacao = StringField(required=True)
-    percentual_reciclado = FloatField(required=True)
+class FrotaVeiculos(BaseModel):
+    numero_veiculos: int
+    tipo_veiculos: List[str]
+    combustivel_veiculos: str
+    consumo_mensal_por_veiculo: int
 
 
-class MateriaisConstrucao(EmbeddedDocument):
-    cimento_toneladas_por_mes = IntField(required=True)
-    aco_toneladas_por_mes = IntField(required=True)
-    madeira_m3_por_mes = FloatField(required=True)
-    outros_materiais = DictField(default={})
-
-
-class FrotaVeiculos(EmbeddedDocument):
-    numero_veiculos = IntField(required=True)
-    tipo_veiculos = ListField(StringField(), required=True)
-    combustivel_veiculos = StringField(required=True)
-    consumo_mensal_por_veiculo = IntField(required=True)
-
-
-class DadosComplementares(EmbeddedDocument):
-    compensacao_carbono = BooleanField(required=True)
-    praticas_sustentaveis = StringField(required=True)
+class DadosComplementares(BaseModel):
+    compensacao_carbono: bool
+    praticas_sustentaveis: str
 
 
 # Modelo Principal
-class Report(Document):
-    id = IntField(primary_key=True)
-    informacoes_gerais = EmbeddedDocumentField(InformacoesGerais, required=True)
-    consumo_energia = EmbeddedDocumentField(ConsumoEnergia, required=True)
-    transporte_materiais = EmbeddedDocumentField(TransporteMateriais, required=True)
-    residuos_obra = EmbeddedDocumentField(ResiduosObra, required=True)
-    materiais_construcao = EmbeddedDocumentField(MateriaisConstrucao, required=True)
-    frota_veiculos = EmbeddedDocumentField(FrotaVeiculos, required=True)
-    dados_complementares = EmbeddedDocumentField(DadosComplementares, required=True)
-
-    def save(self, *args, **kwargs):
-        if not self.id:  # Gera o ID autoincrementável
-            self.id = get_next_sequence("obra")
-        super(Report, self).save(*args, **kwargs)
+class Report(BaseModel):
+    id: Optional[int]  # ID será atribuído no controlador
+    informacoes_gerais: InformacoesGerais
+    consumo_energia: ConsumoEnergia
+    transporte_materiais: TransporteMateriais
+    residuos_obra: ResiduosObra
+    materiais_construcao: MateriaisConstrucao
+    frota_veiculos: FrotaVeiculos
+    dados_complementares: DadosComplementares
