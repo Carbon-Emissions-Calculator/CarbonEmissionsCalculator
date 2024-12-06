@@ -89,7 +89,10 @@
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ number1: parseInt(number1), number2: parseInt(number2) })
+          body: JSON.stringify({
+            number1: parseInt(number1),
+            number2: parseInt(number2)
+          })
         });
 
         // Processar a resposta
