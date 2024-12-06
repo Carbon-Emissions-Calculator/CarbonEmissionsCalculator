@@ -1,6 +1,7 @@
-# Importando os módulos necessários do FastAPI
-from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, EmailStr
+from typing import List
+from uuid import uuid4
 from fastapi.middleware.cors import CORSMiddleware
 
 # Criando a aplicação FastAPI
@@ -9,37 +10,57 @@ app = FastAPI()
 # Configurando o middleware CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permitir todas as origens
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Modelo de dados para o usuário
+class User(BaseModel):
+    id: str  # ID será gerado automaticamente como uma string única
+    name: str  # Nome do usuário
+    email: EmailStr  # Email válido
 
-# Modelo de dados usado para receber os números no POST
-class Numbers(BaseModel):
-    number1: int  # Primeiro número inteiro
-    number2: int  # Segundo número inteiro
+# Lista para armazenar os usuários
+users_db: List[User] = []
 
-# Rota GET para retornar a mensagem "hello world"
-@app.get("/")
-def read_root():
-    """
-    Endpoint principal que retorna uma mensagem de saudação.
-    """
-    return {"message": "Hello World"}  # Resposta no formato JSON
+# Rota para criar um novo usuário
+@app.post("/users", response_model=User)
+def create_user(user: User):
+    # Verificar se o email já está em uso
+    if any(u.email == user.email for u in users_db):
+        raise HTTPException(status_code=400, detail="Email já em uso.")
+    user.id = str(uuid4())  # Gerar um ID único
+    users_db.append(user)
+    return user
 
-# Rota POST para receber dois números e retornar o produto
-@app.post("/multiply")
-def multiply_numbers(numbers: Numbers):
-    """
-    Endpoint que recebe dois números inteiros e retorna o produto deles.
-    """
-    # Calculando o produto dos dois números
-    result = numbers.number1 * numbers.number2
-    # Retornando o resultado em formato JSON
-    return {"number1": numbers.number1, "number2": numbers.number2, "result": result}
+# Rota para listar todos os usuários
+@app.get("/users", response_model=List[User])
+def list_users():
+    return users_db
 
-# Para executar, salve este código como um arquivo Python, por exemplo, `main.py`.
-# Em seguida, use o comando `uvicorn main:app --reload` no terminal.
-# A API estará disponível em `http://127.0.0.1:8000`.
+# Rota para obter um único usuário pelo ID
+@app.get("/users/{user_id}", response_model=User)
+def get_user(user_id: str):
+    user = next((u for u in users_db if u.id == user_id), None)
+    if user is None:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    return user
+
+# Rota para atualizar um usuário
+@app.put("/users/{user_id}", response_model=User)
+def update_user(user_id: str, updated_user: User):
+    for index, user in enumerate(users_db):
+        if user.id == user_id:
+            updated_user.id = user_id  # Manter o ID original
+            users_db[index] = updated_user
+            return updated_user
+    raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+
+# Rota para deletar um usuário
+@app.delete("/users/{user_id}")
+def delete_user(user_id: str):
+    global users_db
+    users_db = [user for user in users_db if user.id != user_id]
+    return {"message": "Usuário deletado com sucesso!"}
