@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.controller.report_controller import (
-    create_report, get_all_reports, get_report_by_id
+    create_report, get_all_reports, get_report_by_id, delete_report_by_id
 )
 
 router = APIRouter()
@@ -19,6 +19,13 @@ def get_all_reports_endpoint():
 @router.get("/report/{report_id}")
 def get_report_by_id_endpoint(report_id: str):
     result = get_report_by_id(report_id)
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    return result
+
+@router.delete("/report/{report_id}")
+def delete_report_by_id_endpoint(report_id: str):
+    result = delete_report_by_id(report_id)
     if "error" in result:
         raise HTTPException(status_code=404, detail=result["error"])
     return result
